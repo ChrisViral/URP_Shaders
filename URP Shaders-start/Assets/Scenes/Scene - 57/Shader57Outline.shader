@@ -1,18 +1,22 @@
-﻿Shader "NiksShaders/Shader57Outline" {
+﻿Shader "NiksShaders/Shader57Outline"
+{
 
-    Properties {
-        _OutlineColor ("Outline Color", Color) = (0, 0, 0, 1)
-        _OutlineWidth ("Outline Width", Range(0, 0.01)) = 0.03
+    Properties
+    {
+        _OutlineColour("Outline Colour", Color)        = (0, 0, 0, 1)
+        _OutlineWidth("Outline Width", Range(0, 0.01)) = 0.03
     }
 
-    Subshader {
-
-        Tags {
-            "RenderType" = "Opaque" "RenderPipeline" = "UniversalPipeline"
+    Subshader
+    {
+        Tags
+        {
+            "RenderType"="Opaque"
+            "RenderPipeline"="UniversalPipeline"
         }
 
-        Pass {
-
+        Pass
+        {
             HLSLPROGRAM
 
             #pragma vertex vert
@@ -22,36 +26,32 @@
 
             struct Attributes
             {
-                float4 positionOS : POSITION;
-                float3 normal     : NORMAL;
+                float4 positionOS: POSITION;
+                float3 normal:     NORMAL;
             };
 
             struct Varyings
             {
-                float4 positionHCS : SV_POSITION;
+                float4 positionHCS: SV_POSITION;
             };
 
             CBUFFER_START(UnityPerMaterial)
             half _OutlineWidth;
-            half4 _OutlineColor;
+            half4 _OutlineColour;
             CBUFFER_END
 
-            Varyings vert(Attributes IN) {
+            Varyings vert(Attributes IN)
+            {
                 Varyings OUT;
-
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
-
                 return OUT;
             }
 
-            half4 frag() : COLOR {
-                return _OutlineColor;
+            half4 frag() : COLOR
+            {
+                return _OutlineColour;
             }
-
             ENDHLSL
-
         }
-
     }
-
 }

@@ -1,36 +1,35 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class TrackMouse : MonoBehaviour
+namespace ShadersLearn
 {
-    Material material;
-    Vector4 mouse;
-    Camera camera;
-
-    // Start is called before the first frame update
-    void Start()
+    public class TrackMouse : MonoBehaviour
     {
-        Renderer rend = GetComponent<Renderer>();
-        material = rend.material;
-        mouse = new Vector4();
-        mouse.z = Screen.height;
-        mouse.w = Screen.width;
-        camera = Camera.main;
-    }
+        private static readonly int Mouse = Shader.PropertyToID("_Mouse");
 
-    // Update is called once per frame
-    void Update()
-    {    
-        RaycastHit hit;
-        Ray ray = camera.ScreenPointToRay(Input.mousePosition);
-        
-        if (Physics.Raycast(ray, out hit)) {
-            mouse.x = hit.textureCoord.x;
-            mouse.y = hit.textureCoord.y;
+        private Material material;
+        private Vector4 mouse;
+        private Camera cam;
+
+        private void Awake()
+        {
+            Renderer rend = GetComponent<Renderer>();
+            this.material = rend.material;
+            this.mouse.z = Screen.height;
+            this.mouse.w = Screen.width;
+            this.cam = Camera.main;
         }
-           
-        material.SetVector("_Mouse", mouse);
-        //Debug.Log(mouse);
+
+        private void Update()
+        {
+            Ray ray = this.cam.ScreenPointToRay(Input.mousePosition);
+
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                this.mouse.x = hit.textureCoord.x;
+                this.mouse.y = hit.textureCoord.y;
+            }
+
+            this.material.SetVector(Mouse, this.mouse);
+        }
     }
 }

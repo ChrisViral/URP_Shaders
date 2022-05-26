@@ -18,8 +18,8 @@
 
             fixed4 frag (v2f_img i) : SV_Target
             {
-                fixed3 color = fixed3((sin(_Time.y)+1.0)/2.0, 0.0, (cos(_Time.y)+1.0)/2.0);
-                return fixed4(color, 1.0);
+                fixed3 colour = fixed3((sin(_Time.y) + 1) / 2, 0, (cos(_Time.y) + 1) / 2);
+                return fixed4(colour, 1);
             }
             ENDCG
         }

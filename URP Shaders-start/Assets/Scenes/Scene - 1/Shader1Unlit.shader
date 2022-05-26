@@ -3,6 +3,7 @@
     Properties
     {
     }
+
     SubShader
     {
         Tags { "RenderType"="Opaque" }
@@ -16,9 +17,9 @@
 
             #include "UnityCG.cginc"
 
-            fixed4 frag (v2f_img i) : SV_Target
+            fixed4 frag(v2f_img i) : SV_Target
             {
-                return fixed4(1.0, 0.0, 0.0, 1.0);
+                return fixed4(1, 0, 0, 1);
             }
             ENDCG
         }

@@ -2,73 +2,52 @@
 {
     Properties
     {
-        _TextureA("Texture A", 2D) = "white" {}
-        _TextureB("Texture B", 2D) = "white" {}
-        _Duration("Duration", Float) = 6.0
-        _StartTime("StartTime", Float) = 0
+        _MainTex("Main Texture", 2D) = "white" { }
+        _Duration("Duration", Float) = 6
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline"}
-     
+        Tags { "RenderType"="Opaque" }
         LOD 100
 
         Pass
         {
-            HLSLPROGRAM
+            CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "UnityCG.cginc"
 
-            struct Attributes
-            {
-                float4 positionOS : POSITION;
-                float2 texcoord   : TEXCOORD0;
-            };
-
-            struct Varyings
-            {
-                float4 positionHCS  : SV_POSITION;
-                float2 uv           : TEXCOORD0;
-                float4 positionOS   : TEXCOORD1;
-            };
-            
-            Varyings vert (Attributes IN)
-            {
-                Varyings OUT;
-                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
-                OUT.uv = IN.texcoord;
-                OUT.positionOS = IN.positionOS;
-                return OUT;
-            }
-
-            CBUFFER_START(UnityPerMaterial)
-
-            sampler2D _TextureA;
-            sampler2D _TextureB;
+            sampler2D _MainTex;
             float _Duration;
-            float _StartTime;
 
-            CBUFFER_END
-            
-
-            half4 frag (Varyings IN) : COLOR
+            struct v2f
             {
-                float time = _Time.y - _StartTime;
-                float2 p = -1.0 + 2.0 * IN.uv;
-                float len = length(p);
-                float2 ripple = IN.uv + (p/len)*cos(len*12.0-time*4.0)*0.03;
-                float delta = time/_Duration;
-                float2 uv = lerp(ripple, IN.uv, delta);
-                half3 col1 = tex2D(_TextureA, uv).rgb;
-                half3 col2 = tex2D(_TextureB, uv).rgb;
-                float fade = smoothstep(delta*1.4, delta*2.5, len);
-                half3 color = lerp(col2, col1, fade);
-                
-                return half4( color, 1.0 );
+                float4 vertex:   SV_POSITION;
+                float2 uv:       TEXCOORD0;
+                float4 position: TEXCOORD1;
+            };
+
+            v2f vert(appdata_base v)
+            {
+                v2f output;
+                output.vertex   = UnityObjectToClipPos(v.vertex);
+                output.uv       = v.texcoord;
+                output.position = v.vertex;
+                return output;
             }
-            ENDHLSL
+
+            float4 frag(v2f i) : COLOR
+            {
+                float2 pos = i.position.xy * 2;
+                float len = length(pos);
+                float2 ripple = i.uv + ((pos / len) * 0.03 * cos((len * 12) - (_Time.y * 4)));
+                float theta = fmod(_Time.y, _Duration) * (UNITY_TWO_PI / _Duration);
+                float2 uv = lerp(ripple, i.uv, (sin(theta) + 1) / 2);
+                fixed3 colour = tex2D(_MainTex, uv).rgb;
+                return fixed4(colour, 1);
+            }
+            ENDCG
         }
     }
 }

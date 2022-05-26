@@ -1,31 +1,29 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class RotateCamera : MonoBehaviour
+namespace ShadersLearn
 {
-    public Transform target;
-    private Transform control;
-
-    // Start is called before the first frame update
-    void Start()
+    public class RotateCamera : MonoBehaviour
     {
-        if (target != null)
-        {
-            control = new GameObject().transform;
+        [SerializeField]
+        private Transform target;
 
-            control.position = target.position;
-          
-            transform.SetParent(control);
+        private Transform control;
+
+        private void Start()
+        {
+            if (this.target == null) return;
+
+            this.control = new GameObject().transform;
+            this.control.position = this.target.position;
+            this.transform.SetParent(this.control);
         }
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (target != null)
+        private void Update()
         {
-            control.Rotate(Vector3.up, Time.deltaTime * 10f);
+            if (this.target)
+            {
+                this.control.Rotate(Vector3.up, Time.deltaTime * 10f);
+            }
         }
     }
 }

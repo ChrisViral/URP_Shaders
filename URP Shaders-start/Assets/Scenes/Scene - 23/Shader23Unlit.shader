@@ -2,7 +2,9 @@
 {
     Properties
     {
-        _Sides("Sides", Int) = 3
+        _Sides("Sides", Int)                 = 3
+        _Radius("Radius", Float)             = 100
+        _Rotation("Rotation", Range(0, 6.3)) = 0
     }
     SubShader
     {
@@ -12,75 +14,59 @@
         Pass
         {
             CGPROGRAM
-
             #pragma vertex vert
             #pragma fragment frag
 
-            #define PI 3.14159265359
-            #define PI2 6.28318530718
-
-
             #include "UnityCG.cginc"
+
+            int _Sides;
+            float _Radius;
+            float _Rotation;
 
             struct v2f
             {
-                float4 vertex : SV_POSITION;
+                float4 vertex:    SV_POSITION;
+                float4 position:  TEXCOORD1;
+                float2 uv:        TEXCOORD0;
                 float4 screenPos: TEXCOORD2;
-                float4 position: TEXCOORD1;
-                float2 uv: TEXCOORD0;
             };
-            
-            v2f vert (appdata_base v)
+
+            v2f vert(appdata_base v)
             {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.screenPos = ComputeScreenPos(o.vertex);
-                o.position = v.vertex;
-                o.uv = v.texcoord;
-                return o;
-            }
-            
-            int _Sides;
-
-            float getDelta(float x){
-                return (sin(x)+1.0)/2.0;
+                v2f output;
+                output.vertex   = UnityObjectToClipPos(v.vertex);
+                output.position = v.vertex;
+                output.uv       = v.texcoord;
+                output.screenPos = ComputeScreenPos(output.vertex);
+                return output;
             }
 
-            float circle(float2 pt, float2 center, float radius, float line_width, float edge_thickness){
-                pt -= center;
-                float len = length(pt);
-                //Change true to false to soften the edge
-                float result = smoothstep(radius-line_width/2.0-edge_thickness, radius-line_width/2.0, len) - smoothstep(radius + line_width/2.0, radius + line_width/2.0 + edge_thickness, len);
-
-                return result;
-            }
-
-            float onLine(float x, float y, float line_width, float edge_width){
-                return smoothstep(x-line_width/2.0-edge_width, x-line_width/2.0, y) - smoothstep(x+line_width/2.0, x+line_width/2.0+edge_width, y);
-            }
-
-            float polygon(float2 pt, float2 center, float radius, int sides, float rotate, float edge_thickness){
-                pt -= center;
-
-                // Angle and radius from the current pixel
-                float theta = atan2(pt.y, pt.x) + rotate;
-                float rad = PI2/float(sides);
-
-                // Shaping function that modulate the distance
-                float d = cos(floor(0.5 + theta/rad)*rad-theta)*length(pt);
-
-                return 1.0 - smoothstep(radius, radius + edge_thickness, d);
-            }
-            
-            fixed4 frag (v2f i) : SV_Target
+            float circle(float2 pos, float2 center, float radius, float lineWidth, float smoothing)
             {
-                float2 pt = i.screenPos.xy * _ScreenParams.xy;
-                float2 center = _ScreenParams.xy * 0.5;
-                float radius = 80.0;
-                fixed3 color = polygon(pt, center, radius, _Sides, 0.0, 1.0) * fixed3(1.0, 1.0, 0.0);
-                color += circle(pt, center, radius, 1.0, 1.0) * fixed3(1.0, 1.0, 1.0); 
-                
-                return fixed4(color, 1.0);
+                float len = length(pos - center);
+                float halfLineWidth = lineWidth / 2;
+                float edge = halfLineWidth * smoothing;
+                return smoothstep(radius - halfLineWidth - edge, radius - halfLineWidth,        len)
+                     - smoothstep(radius + halfLineWidth,        radius + halfLineWidth + edge, len);
+            }
+
+            float polygon(float2 pos, float2 center, float radius, int sides, float rotate, float smoothing)
+            {
+                pos -= center;
+                float theta = atan2(pos.y, pos.x) + rotate;
+                float rad = UNITY_TWO_PI / float(sides);
+                float edge = radius * smoothing;
+                float dist = cos((floor(0.5 + (theta / rad)) * rad) - theta) * length(pos);
+                return 1 - smoothstep(radius, radius + edge, dist);
+            }
+
+            fixed4 frag(v2f i) : SV_Target
+            {
+                float2 pos = i.screenPos.xy * _ScreenParams.xy;
+                float2 center = _ScreenParams.xy / 2;
+                fixed3 colour = polygon(pos, center, _Radius, _Sides, _Rotation, 0.02) * fixed3(1, 1, 0);
+                colour += circle(pos, center, _Radius, 5, 0.01) * fixed3(1, 1, 1);
+                return fixed4(colour, 1);
             }
             ENDCG
         }

@@ -2,74 +2,60 @@
 {
     Properties
     {
-        _PaleColor("Pale Color", Color) = (0.733, 0.565, 0.365, 1)
-        _DarkColor("Dark Color", Color) = (0.49, 0.286, 0.043, 1)
-        _Frequency("Frequency", Float) = 2.0
-        _NoiseScale("Noise Scale", Float) = 6.0
-        _RingScale("Ring Scale", Float) = 0.6
-        _Contrast("Contrast", Float) = 4.0
+        _PaleColour("Pale Colour", Color) = (0.733, 0.565, 0.365, 1)
+        _DarkColour("Dark Colour", Color) = (0.49,  0.286, 0.043, 1)
+        _Frequency("Frequency", Float)    = 2
+        _NoiseScale("Noise Scale", Float) = 6
+        _RingScale("Ring Scale", Float)   = 0
+        _Contrast("Contrast", Float)      = 4
     }
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline" = "UniversalPipeline" }
-     
+        Tags { "RenderType"="Opaque" }
         LOD 100
 
         Pass
         {
-            HLSLPROGRAM
+            CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "UnityCG.cginc"
             #include "noiseSimplex.cginc"
 
-            struct Attributes
-            {
-                float4 positionOS : POSITION;
-            };
-
-            struct Varyings
-            {
-                float4 positionHCS  : SV_POSITION;
-                float4 positionOS   : TEXCOORD1;
-            
-            };
-
-            Varyings vert (Attributes IN)
-            {
-                Varyings OUT;
-                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
-                OUT.positionOS = IN.positionOS;
-                return OUT;
-            }
-
-            CBUFFER_START(UnityPerMaterial)
-
-            float4 _PaleColor;
-            float4 _DarkColor;
+            fixed4 _PaleColour;
+            fixed4 _DarkColour;
             float _Frequency;
             float _NoiseScale;
             float _RingScale;
             float _Contrast;
 
-            CBUFFER_END
-
-            float4 frag (Varyings i) : COLOR
+            struct v2f
             {
-                float3 pos = i.positionOS.xyz * 2.0;
-                float n = snoise( pos );
-                float ring = frac( _Frequency * pos.z + _NoiseScale * n );
-                ring *= _Contrast * ( 1.0 - ring );
+                float4 vertex:   SV_POSITION;
+                float4 position: TEXCOORD1;
+            };
 
-                // Adjust ring smoothness and shape, and add some noise
-                float delta = pow( ring, _RingScale ) + n;
-                float3 color = lerp(_DarkColor, _PaleColor, delta);
-
-                return float4( color, 1.0 );
+            v2f vert(appdata_base v)
+            {
+                v2f output;
+                output.vertex   = UnityObjectToClipPos(v.vertex);
+                output.position = v.vertex;
+                return output;
             }
-            ENDHLSL
+
+            float4 frag(v2f i) : COLOR
+            {
+                float3 pos    = i.position.xyz * 2;
+                float n = snoise(pos);
+                float ring = frac((_Frequency * pos.z) + (_NoiseScale * n));
+                ring *= _Contrast * (1 - ring);
+                float delta = pow(ring, _RingScale) + n;
+                fixed3 colour = lerp(_DarkColour, _PaleColour, delta);
+                return fixed4(colour, 1);
+            }
+            ENDCG
         }
     }
 }

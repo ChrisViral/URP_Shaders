@@ -1,43 +1,55 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public class UIHandler : MonoBehaviour
+namespace ShadersLearn
 {
-    public GameObject quad;
-    public List<Texture> images;
-    private int index;
-    private Material material;
-
-    // Start is called before the first frame update
-    void Start()
+    public class UIHandler : MonoBehaviour
     {
-        index = 0;
+        private static readonly int StartTime = Shader.PropertyToID("_StartTime");
+        private static readonly int TextureA  = Shader.PropertyToID("_TextureA");
+        private static readonly int TextureB  = Shader.PropertyToID("_TextureB");
 
-        if (quad != null)
+        [SerializeField]
+        private GameObject quad;
+        [SerializeField]
+        private Texture[] images;
+
+        private int index;
+        private Material material;
+
+        // Start is called before the first frame update
+        private void Start()
         {
-            material = quad.GetComponent<Renderer>().material;
-            material.SetFloat("_StartTime", Time.time);
+            this.index = 0;
+
+            if (!this.quad) return;
+
+            this.material = this.quad.GetComponent<Renderer>().material;
+            this.material.SetFloat(StartTime, Time.time);
             NextClicked();
         }
-    }
 
-    public void NextClicked()
-    {
-        if (material == null) return;
-        index++;
-        if (index >= images.Count) index = 0;
-        if (index == 0)
+        public void NextClicked()
         {
-            material.SetTexture("_TextureA", images[images.Count - 1]);
-            material.SetTexture("_TextureB", images[index]);
+            if (!this.material) return;
+
+            this.index++;
+            if (this.index >= this.images.Length)
+            {
+                this.index = 0;
+            }
+
+            if (this.index == 0)
+            {
+                this.material.SetTexture(TextureA, this.images[^1]);
+                this.material.SetTexture(TextureB, this.images[this.index]);
+            }
+            else
+            {
+                this.material.SetTexture(TextureA, this.images[this.index - 1]);
+                this.material.SetTexture(TextureB, this.images[this.index]);
+            }
+
+            this.material.SetFloat(StartTime, Time.time);
         }
-        else
-        {
-            material.SetTexture("_TextureA", images[index-1]);
-            material.SetTexture("_TextureB", images[index]);
-        }
-        
-        material.SetFloat("_StartTime", Time.time);
     }
 }

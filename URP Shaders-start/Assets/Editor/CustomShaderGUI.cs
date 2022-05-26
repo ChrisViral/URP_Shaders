@@ -1,12 +1,13 @@
-﻿using UnityEngine;
-using UnityEditor;
-using System;
+﻿using UnityEditor;
 
-public class CustomShaderGUI : ShaderGUI
+namespace ShadersLearn.Editor
 {
-    public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
+    public class CustomShaderGUI : ShaderGUI
     {
-        // render the default gui
-        base.OnGUI(materialEditor, properties);
+        public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
+        {
+            // render the default gui
+            base.OnGUI(materialEditor, properties);
+        }
     }
 }

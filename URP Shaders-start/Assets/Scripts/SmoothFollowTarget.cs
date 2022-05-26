@@ -1,40 +1,31 @@
-using System;
 using UnityEngine;
 
-public class SmoothFollowTarget : MonoBehaviour
+namespace ShadersLearn
 {
-    public GameObject target;
-    public float[] limitsX;
-    Vector3 offset;
-    
-
-    bool b;
-
-    private void LateUpdate()
+    public class SmoothFollowTarget : MonoBehaviour
     {
-        if (target == null)
+        [SerializeField]
+        private GameObject target;
+        [SerializeField]
+        private Vector2 limitsX = new(float.NegativeInfinity, float.PositiveInfinity);
+
+        private Vector3? offset;
+
+        private void LateUpdate()
         {
-            target = GameObject.FindGameObjectWithTag("Player");
-            return;
-        }
-        else
-        {
-            if (!b)
+            if (!this.target)
             {
-                offset = transform.position - target.transform.position;
-                b = true;
+                this.target = GameObject.FindGameObjectWithTag("Player");
+                if (!this.target) return;
             }
 
-            Vector3 pos = target.transform.position + offset;
-            if (limitsX != null && limitsX.Length == 2)
-            {
-                pos.x = Mathf.Clamp(pos.x, limitsX[0], limitsX[1]);
-                //Debug.Log("pos.x clamped to " + pos.x);
-            }
-            transform.position = Vector3.Lerp(transform.position, pos, Time.deltaTime * 5);
-            transform.LookAt(target.transform);
-            return;
+            Vector3 position = this.transform.position;
+            Vector3 targetPosition = this.target.transform.position;
+            this.offset ??= position - targetPosition;
+            Vector3 pos = targetPosition + this.offset.Value;
+            pos.x = Mathf.Clamp(pos.x, this.limitsX.x, this.limitsX.y);
+            this.transform.position = Vector3.Lerp(position, pos, Time.deltaTime * 5f);
+            this.transform.LookAt(this.target.transform);
         }
     }
 }
-

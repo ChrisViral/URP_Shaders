@@ -2,17 +2,21 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
-[ExecuteAlways]
-public class AutoLoadPipelineAsset : MonoBehaviour
+namespace ShadersLearn
 {
-    public UniversalRenderPipelineAsset pipelineAsset;
-
-    // Start is called before the first frame update
-    void OnEnable()
+    [ExecuteAlways]
+    public class AutoLoadPipelineAsset : MonoBehaviour
     {
-        if (pipelineAsset)
+        [SerializeField]
+        private UniversalRenderPipelineAsset pipelineAsset;
+
+        // Start is called before the first frame update
+        private void OnEnable()
         {
-            GraphicsSettings.renderPipelineAsset = pipelineAsset;
-        }   
+            if (this.pipelineAsset)
+            {
+                GraphicsSettings.renderPipelineAsset = this.pipelineAsset;
+            }
+        }
     }
 }

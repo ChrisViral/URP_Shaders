@@ -2,7 +2,7 @@ Shader "NiksShaders/Shader70Unlit"
 {
     Properties
     {
-        _MainTex ("Main Texture", 2D) = "white" {}
+        _MainTex ("Main Texture", 2D) = "white" { }
     }
     SubShader
     {
@@ -14,19 +14,19 @@ Shader "NiksShaders/Shader70Unlit"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            
+
              #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct Attributes
             {
-                float4 positionOS : POSITION;
-                float2 texcoord : TEXCOORD0;
+                float4 positionOS: POSITION;
+                float2 texcoord:   TEXCOORD0;
             };
 
             struct Varyings
             {
-                float2 uv : TEXCOORD0;
-                float4 positionCS : SV_POSITION;
+                float2 uv:         TEXCOORD0;
+                float4 positionCS: SV_POSITION;
             };
 
             CBUFFER_START(UnityPerMaterial)
@@ -34,20 +34,20 @@ Shader "NiksShaders/Shader70Unlit"
             sampler2D _MainTex;
 
             CBUFFER_END
-            
-            Varyings vert (Attributes input)
+
+            Varyings vert(Attributes input)
             {
                 Varyings output;
                 output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
-                output.uv = input.texcoord;
+                output.uv         = input.texcoord;
                 return output;
             }
 
-            half4 frag (Varyings input) : SV_Target
+            half4 frag(Varyings input) : SV_Target
             {
                 // sample the texture
-                half4 col = tex2D(_MainTex, input.uv);
-                return col;
+                half4 colour = tex2D(_MainTex, input.uv);
+                return colour;
             }
             ENDHLSL
         }

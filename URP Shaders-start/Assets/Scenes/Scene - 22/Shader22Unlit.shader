@@ -2,7 +2,10 @@
 {
     Properties
     {
+        _AxisColour("Axis Colour", Color)   = (0.8, 0.8, 0.8, 1)
+        _SweepColour("Sweep Colour", Color) = (0.1, 0.3, 1, 1)
     }
+
     SubShader
     {
         Tags { "RenderType"="Opaque" }
@@ -11,96 +14,92 @@
         Pass
         {
             CGPROGRAM
-
             #pragma vertex vert
             #pragma fragment frag
 
-            #define PI 3.14159265359
-            #define PI2 6.28318530718
-
-
             #include "UnityCG.cginc"
+
+            fixed4 _AxisColour;
+            fixed4 _SweepColour;
 
             struct v2f
             {
-                float4 vertex : SV_POSITION;
+                float4 vertex:   SV_POSITION;
                 float4 position: TEXCOORD1;
-                float2 uv: TEXCOORD0;
+                float2 uv:       TEXCOORD0;
             };
-            
-            v2f vert (appdata_base v)
+
+            v2f vert(appdata_base v)
             {
-                v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.position = v.vertex;
-                o.uv = v.texcoord;
-                return o;
-            }
-            
-            float getDelta(float x){
-                return (sin(x)+1.0)/2.0;
+                v2f output;
+                output.vertex   = UnityObjectToClipPos(v.vertex);
+                output.position = v.vertex;
+                output.uv       = v.texcoord;
+                return output;
             }
 
-            float sweep(float2 pt, float2 center, float radius, float line_width, float edge_thickness){
-                float2 d = pt - center;
-                float theta = _Time.z;
-                float2 p = float2(cos(theta), -sin(theta))*radius;
-                float h = clamp( dot(d,p)/dot(p,p), 0.0, 1.0 );
-                //float h = dot(d,p)/dot(p,p);
-                float l = length(d - p*h);
+            float sweep(float2 pos, float2 center, float radius, float lineWidth, float smoothing)
+            {
+                pos             -= center;
+                float theta      = _Time.z;
+                float2 sweepLine = float2(cos(theta), -sin(theta)) * radius;
+                float height     = clamp(dot(pos, sweepLine) / dot(sweepLine, sweepLine), 0, 1);
+                float len        = length(pos - (sweepLine * height));
+                float edge       = lineWidth * smoothing;
 
-                float gradient = 0.0;
-                const float gradient_angle = PI * 0.2;
-
-                if (length(d)<radius){
-                    float angle = fmod(theta + atan2(d.y, d.x), PI2);
-                    gradient = clamp(gradient_angle - angle, 0.0, gradient_angle)/gradient_angle * 0.5;
+                float gradient = 0;
+                const float GRADIENT_ANGLE = UNITY_PI / 2;
+                if (length(pos) < radius)
+                {
+                    float angle = fmod(theta + atan2(pos.y, pos.x), UNITY_TWO_PI);
+                    gradient    = (clamp(GRADIENT_ANGLE - angle, 0, GRADIENT_ANGLE) / GRADIENT_ANGLE) / 2;
                 }
 
-                return gradient + 1.0 - smoothstep(line_width, line_width+edge_thickness, l);
+                return gradient + 1 - smoothstep(lineWidth, lineWidth + edge, len);
             }
 
-            float circle(float2 pt, float2 center, float radius, float line_width, float edge_thickness){
-                pt -= center;
-                float len = length(pt);
-                //Change true to false to soften the edge
-                float result = smoothstep(radius-line_width/2.0-edge_thickness, radius-line_width/2.0, len) - smoothstep(radius + line_width/2.0, radius + line_width/2.0 + edge_thickness, len);
-
-                return result;
-            }
-
-            float onLine(float x, float y, float line_width, float edge_width){
-                return smoothstep(x-line_width/2.0-edge_width, x-line_width/2.0, y) - smoothstep(x+line_width/2.0, x+line_width/2.0+edge_width, y);
-            }
-
-            float polygon(float2 pt, float2 center, float radius, int sides, float rotate, float edge_thickness){
-                pt -= center;
-
-                // Angle and radius from the current pixel
-                float theta = atan2(pt.y, pt.x) + rotate;
-                float rad = PI2/float(sides);
-
-                // Shaping function that modulate the distance
-                float d = cos(floor(0.5 + theta/rad)*rad-theta)*length(pt);
-
-                return 1.0 - smoothstep(radius, radius + edge_thickness, d);
-            }
-            
-            fixed4 frag (v2f i) : SV_Target
+            float circle(float2 pos, float2 center, float radius, float lineWidth, float smoothing)
             {
-                fixed3 axis_color = fixed3(0.8, 0.8, 0.8);
-                fixed3 white = fixed3(1.0, 1.0, 1.0);
-                fixed3 color = onLine(i.uv.y, 0.5, 0.002, 0.001) * axis_color;//xAxis
-                color += onLine(i.uv.x, 0.5, 0.002, 0.001) * axis_color;//yAxis
-                float2 center = float2(0.5, 0.5);
-                color += circle(i.uv, center, 0.3, 0.002, 0.001) * axis_color;
-                color += circle(i.uv, center, 0.2, 0.002, 0.001) * axis_color;
-                color += circle(i.uv, center, 0.1, 0.002, 0.001) * axis_color;
-                color += sweep(i.uv, center, 0.3, 0.003, 0.001) * fixed3(0.1, 0.3, 1.0);
-                color += polygon(i.uv, float2(0.9 - sin(_Time.w)*0.05, 0.5), 0.005, 3, 0.0, 0.001) * white;
-                color += polygon(i.uv, float2(0.1 - sin(_Time.w+PI)*0.05, 0.5), 0.005, 3, PI, 0.001) * white; 
-                
-                return fixed4(color, 1.0);
+                float len = length(pos - center);
+                float halfLineWidth = lineWidth / 2;
+                float edge = halfLineWidth * smoothing;
+                return smoothstep(radius - halfLineWidth - edge, radius - halfLineWidth,        len)
+                     - smoothstep(radius + halfLineWidth,        radius + halfLineWidth + edge, len);
+            }
+
+            float onLine(float x, float y, float lineWidth, float smoothing)
+            {
+                float halfLineWidth = lineWidth / 2;
+                float edge = halfLineWidth * smoothing;
+                return smoothstep(x - halfLineWidth - edge, x - halfLineWidth, y) - smoothstep(x + halfLineWidth, x + halfLineWidth + edge, y);
+            }
+
+            float polygon(float2 pos, float2 center, float radius, int sides, float rotate, float smoothing)
+            {
+                pos -= center;
+                float theta = atan2(pos.y, pos.x) + rotate;
+                float rad = UNITY_TWO_PI / float(sides);
+                float edge = radius * smoothing;
+                float dist = cos((floor(0.5 + (theta / rad)) * rad) - theta) * length(pos);
+                return 1 - smoothstep(radius, radius + edge, dist);
+            }
+
+            fixed4 frag(v2f i) : SV_Target
+            {
+                float2 center = 0.5;
+                fixed3 colour = onLine(i.uv.y, 0.5, 0.002, 0.5) * _AxisColour;
+                colour       += onLine(i.uv.x, 0.5, 0.002, 0.5) * _AxisColour;
+
+                colour       += circle(i.uv, center, 0.3, 0.002, 0.5) * _AxisColour;
+                colour       += circle(i.uv, center, 0.2, 0.002, 0.5) * _AxisColour;
+                colour       += circle(i.uv, center, 0.1, 0.002, 0.5) * _AxisColour;
+
+                colour       += sweep(i.uv, center, 0.3, 0.002, 0.5) * _SweepColour;
+
+                colour += polygon(i.uv, float2(0.9 - (sin(_Time.w) / 20),            0.5), 0.005, 3, 0.0,      0.2) * _AxisColour;
+                colour += polygon(i.uv, float2(0.1 - (sin(_Time.w + UNITY_PI) / 20), 0.5), 0.005, 3, UNITY_PI, 0.2) * _AxisColour;
+
+                return fixed4(colour, 1);
             }
             ENDCG
         }
