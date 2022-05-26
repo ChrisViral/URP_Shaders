@@ -3,9 +3,9 @@
 
     Properties
     {
-        _MainTex("Texture", 2D)           = "white"  { }
-        _Colour("Colour", Color)            = (1, 1, 1, 1)
-        _LevelCount("Level Count", Float) = 3
+        [NoScaleOffset] _BaseMap("Texture", 2D)            = "white"  { }
+        _Colour("Colour", Color)                           = (1, 1, 1, 1)
+        [IntRange] _LevelCount("Level Count", Range(2, 10)) = 3
     }
 
     Subshader
@@ -24,18 +24,23 @@
             #pragma fragment frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
-
-            float _LevelCount;
+            int _LevelCount;
             half4 _Colour;
-            sampler2D _MainTex;
-
+            sampler2D _BaseMap;
             CBUFFER_END
 
             half4 LightingRamp(float3 normal)
             {
-                return _Colour;
+                Light light = GetMainLight();
+                half normalDot = dot(normal, light.direction);
+                half diff = (normalDot / 2) + 0.5;
+                diff *= diff;
+                half3 ramp = floor(diff * _LevelCount) / _LevelCount;
+                half3 colour = _Colour * light.color.rgb * ramp;
+                return half4(colour, 1);
             }
 
             struct Attributes

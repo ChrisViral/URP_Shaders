@@ -6,22 +6,43 @@
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags
+        {
+            "RenderType"="Opaque"
+            "RenderPipeline"="UniversalPipeline"
+        }
         LOD 100
 
         Pass
         {
-            CGPROGRAM
-            #pragma vertex vert_img
+            HLSLPROGRAM
+            #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            fixed4 frag(v2f_img i) : SV_Target
+            struct Attributes
             {
-                return fixed4(1, 0, 0, 1);
+                float4 positionOS: POSITION;
+            };
+
+            struct Varyings
+            {
+                float4 positionHCS: SV_POSITION;
+            };
+
+            Varyings vert(Attributes IN)
+            {
+                Varyings OUT;
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                return OUT;
             }
-            ENDCG
+
+            half4 frag() : SV_Target
+            {
+                return half4(1, 0 , 0, 1);
+            }
+            ENDHLSL
         }
     }
 }

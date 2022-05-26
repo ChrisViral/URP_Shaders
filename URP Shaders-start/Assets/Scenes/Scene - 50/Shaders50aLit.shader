@@ -3,6 +3,7 @@ Shader "NiksShaders/Shader50aLit"
     Properties
     {
         [NoScaleOffset] _BaseMap("Texture", 2D) = "white" { }
+        _Ambient("Ambient", Range(0, 1))        = 0.3
     }
 
     Subshader
@@ -25,23 +26,25 @@ Shader "NiksShaders/Shader50aLit"
             #pragma fragment frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
             sampler2D _BaseMap;
+            float _Ambient;
             CBUFFER_END
 
             struct Attributes
             {
                 float4 positionOS: POSITION;
-                float2 texcoord  : TEXCOORD0;
-                float3 normal    : NORMAL;
+                float2 texcoord:   TEXCOORD0;
+                float3 normal:     NORMAL;
             };
 
             struct Varyings
             {
                 float4 positionHCS: SV_POSITION;
-                float2 uv         : TEXCOORD0;
-                float3 normal     : NORMAL;
+                float2 uv:          TEXCOORD0;
+                float3 normal:      NORMAL;
             };
 
             Varyings vert(Attributes IN)
@@ -55,12 +58,13 @@ Shader "NiksShaders/Shader50aLit"
 
             half4 frag(Varyings IN) : SV_Target
             {
+                Light light = GetMainLight();
+                half3 lightingColour = LightingLambert(light.color, light.direction, IN.normal);
                 half3 texel = tex2D(_BaseMap, IN.uv).rgb;
-                half3 color = texel;
-                return half4(color, 1);
+                half3 colour = texel * saturate(lightingColour + _Ambient);
+                return half4(colour, 1);
             }
             ENDHLSL
         }
     }
-
 }

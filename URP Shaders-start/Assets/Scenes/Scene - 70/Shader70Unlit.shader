@@ -2,11 +2,18 @@ Shader "NiksShaders/Shader70Unlit"
 {
     Properties
     {
-        _MainTex ("Main Texture", 2D) = "white" { }
+        [NoScaleOffset] _MainTex("Main Texture", 2D) = "white" { }
+        _TintColour("TintColour", Color)             = (1, 1, 1, 1)
+        _TintStrength("TintStrength", Range(0, 1))   = 0.5
+        _Brightness("Brightness", Range(0, 3))       = 1
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags
+        {
+            "RenderType"="Opaque"
+            "RenderPipeline"="UniversalPipeline"
+        }
         LOD 100
 
         Pass
@@ -16,6 +23,14 @@ Shader "NiksShaders/Shader70Unlit"
             #pragma fragment frag
 
              #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            CBUFFER_START(UnityPerMaterial)
+            sampler2D _MainTex;
+            half4 _TintColour;
+            float _TintStrength;
+            float _Brightness;
+            CBUFFER_END
+
 
             struct Attributes
             {
@@ -29,25 +44,21 @@ Shader "NiksShaders/Shader70Unlit"
                 float4 positionCS: SV_POSITION;
             };
 
-            CBUFFER_START(UnityPerMaterial)
-
-            sampler2D _MainTex;
-
-            CBUFFER_END
-
-            Varyings vert(Attributes input)
+            Varyings vert(Attributes IN)
             {
-                Varyings output;
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
-                output.uv         = input.texcoord;
-                return output;
+                Varyings OUT;
+                OUT.positionCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv         = IN.texcoord;
+                return OUT;
             }
 
-            half4 frag(Varyings input) : SV_Target
+            half4 frag(Varyings IN) : SV_Target
             {
                 // sample the texture
-                half4 colour = tex2D(_MainTex, input.uv);
-                return colour;
+                half4 texel  = tex2D(_MainTex, IN.uv);
+                half grey    = (texel.r + texel.g + texel.b) / 3.0;
+                half4 tinted = _TintColour * grey * _Brightness;
+                return lerp(texel, tinted, _TintStrength);
             }
             ENDHLSL
         }

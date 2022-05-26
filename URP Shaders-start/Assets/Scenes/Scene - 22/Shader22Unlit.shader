@@ -8,34 +8,44 @@
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags
+        {
+            "RenderType"="Opaque"
+            "RenderPipeline"="UniversalPipeline"
+        }
         LOD 100
 
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            fixed4 _AxisColour;
-            fixed4 _SweepColour;
+            CBUFFER_START(UnityPerMaterial)
+            half4 _AxisColour;
+            half4 _SweepColour;
+            CBUFFER_END
 
-            struct v2f
+            struct Attributes
             {
-                float4 vertex:   SV_POSITION;
-                float4 position: TEXCOORD1;
-                float2 uv:       TEXCOORD0;
+                float4 positionOS: POSITION;
+                float2 texcoord  : TEXCOORD0;
             };
 
-            v2f vert(appdata_base v)
+            struct Varyings
             {
-                v2f output;
-                output.vertex   = UnityObjectToClipPos(v.vertex);
-                output.position = v.vertex;
-                output.uv       = v.texcoord;
-                return output;
+                float4 positionHCS: SV_POSITION;
+                float2 uv:          TEXCOORD0;
+            };
+
+            Varyings vert(Attributes IN)
+            {
+                Varyings OUT;
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv          = IN.texcoord;
+                return OUT;
             }
 
             float sweep(float2 pos, float2 center, float radius, float lineWidth, float smoothing)
@@ -48,10 +58,10 @@
                 float edge       = lineWidth * smoothing;
 
                 float gradient = 0;
-                const float GRADIENT_ANGLE = UNITY_PI / 2;
+                const float GRADIENT_ANGLE = PI / 2;
                 if (length(pos) < radius)
                 {
-                    float angle = fmod(theta + atan2(pos.y, pos.x), UNITY_TWO_PI);
+                    float angle = fmod(theta + atan2(pos.y, pos.x), TWO_PI);
                     gradient    = (clamp(GRADIENT_ANGLE - angle, 0, GRADIENT_ANGLE) / GRADIENT_ANGLE) / 2;
                 }
 
@@ -78,30 +88,30 @@
             {
                 pos -= center;
                 float theta = atan2(pos.y, pos.x) + rotate;
-                float rad = UNITY_TWO_PI / float(sides);
+                float rad = TWO_PI / float(sides);
                 float edge = radius * smoothing;
                 float dist = cos((floor(0.5 + (theta / rad)) * rad) - theta) * length(pos);
                 return 1 - smoothstep(radius, radius + edge, dist);
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            half4 frag(Varyings IN) : SV_Target
             {
                 float2 center = 0.5;
-                fixed3 colour = onLine(i.uv.y, 0.5, 0.002, 0.5) * _AxisColour;
-                colour       += onLine(i.uv.x, 0.5, 0.002, 0.5) * _AxisColour;
+                half3 colour = onLine(IN.uv.y, 0.5, 0.002, 0.5) * _AxisColour.rgb;
+                colour      += onLine(IN.uv.x, 0.5, 0.002, 0.5) * _AxisColour.rgb;
 
-                colour       += circle(i.uv, center, 0.3, 0.002, 0.5) * _AxisColour;
-                colour       += circle(i.uv, center, 0.2, 0.002, 0.5) * _AxisColour;
-                colour       += circle(i.uv, center, 0.1, 0.002, 0.5) * _AxisColour;
+                colour      += circle(IN.uv, center, 0.3, 0.002, 0.5) * _AxisColour.rgb;
+                colour      += circle(IN.uv, center, 0.2, 0.002, 0.5) * _AxisColour.rgb;
+                colour      += circle(IN.uv, center, 0.1, 0.002, 0.5) * _AxisColour.rgb;
 
-                colour       += sweep(i.uv, center, 0.3, 0.002, 0.5) * _SweepColour;
+                colour      += sweep(IN.uv, center, 0.3, 0.002, 0.5) * _SweepColour.rgb;
 
-                colour += polygon(i.uv, float2(0.9 - (sin(_Time.w) / 20),            0.5), 0.005, 3, 0.0,      0.2) * _AxisColour;
-                colour += polygon(i.uv, float2(0.1 - (sin(_Time.w + UNITY_PI) / 20), 0.5), 0.005, 3, UNITY_PI, 0.2) * _AxisColour;
+                colour += polygon(IN.uv, float2(0.9 - (sin(_Time.w) / 20),            0.5), 0.005, 3, 0.0,      0.2) * _AxisColour.rgb;
+                colour += polygon(IN.uv, float2(0.1 - (sin(_Time.w + PI) / 20), 0.5), 0.005, 3, PI, 0.2) * _AxisColour.rgb;
 
-                return fixed4(colour, 1);
+                return half4(colour, 1);
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

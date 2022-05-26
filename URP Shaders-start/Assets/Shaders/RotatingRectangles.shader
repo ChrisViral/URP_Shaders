@@ -73,7 +73,7 @@
               float2 pos        = frac(i.uv * _TileCount) - center;
               float2x2 rotation = getRotationMatrix(_Time.y);
               float2x2 scale    = getScaleMatrix(((sin(_Time.y) + 1) / 3.0) + 0.5);
-              pos  = mul(rotation, pos)
+              pos  = mul(rotation, pos);
               pos  = mul(scale, pos);
               pos += center;
               float r = inRect(pos, 0, 0.3, center);

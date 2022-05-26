@@ -10,6 +10,7 @@
 
         Pass
         {
+            ZWrite Off
             HLSLPROGRAM
 
             #pragma vertex vert
@@ -36,7 +37,7 @@
 
             half4 frag() : SV_Target
             {
-                return (half4)0;
+                return 0;
             }
 
             ENDHLSL

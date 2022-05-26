@@ -468,7 +468,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: ada30c88b83cd497ca0539ef44a80f3b, type: 2}
+      objectReference: {fileID: 2100000, guid: f7df87e32e6f31e47a570c3e155db5e3, type: 2}
     - target: {fileID: -927199367670048503, guid: 0e5d90547d90c4fa5bb97466d8200a7a,
         type: 3}
       propertyPath: m_Name
@@ -477,7 +477,7 @@ PrefabInstance:
     - target: {fileID: -927199367670048503, guid: 0e5d90547d90c4fa5bb97466d8200a7a,
         type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0e5d90547d90c4fa5bb97466d8200a7a, type: 3}
@@ -493,7 +493,7 @@ GameObject:
   - component: {fileID: 1897068739}
   - component: {fileID: 1897068738}
   - component: {fileID: 1897068737}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Quad
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -572,7 +572,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1897068736}
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 2.11, y: 0.87, z: -0.07}
+  m_LocalPosition: {x: 2.11, y: 0.884, z: -0.157}
   m_LocalScale: {x: 0.81977856, y: 0.81977856, z: 0.81977856}
   m_ConstrainProportionsScale: 0
   m_Children: []

@@ -17,12 +17,19 @@
 
         Pass
         {
+            Cull Front
+
             HLSLPROGRAM
 
             #pragma vertex vert
             #pragma fragment frag
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            CBUFFER_START(UnityPerMaterial)
+            half _OutlineWidth;
+            half4 _OutlineColour;
+            CBUFFER_END
 
             struct Attributes
             {
@@ -35,14 +42,10 @@
                 float4 positionHCS: SV_POSITION;
             };
 
-            CBUFFER_START(UnityPerMaterial)
-            half _OutlineWidth;
-            half4 _OutlineColour;
-            CBUFFER_END
-
             Varyings vert(Attributes IN)
             {
                 Varyings OUT;
+                IN.positionOS.xyz += IN.normal * _OutlineWidth;
                 OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
                 return OUT;
             }

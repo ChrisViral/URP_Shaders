@@ -12,50 +12,61 @@
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags
+        {
+            "RenderType"="Opaque"
+            "RenderPipeline"="UniversalPipeline"
+        }
         LOD 100
 
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
-            #include "noiseSimplex.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Assets/hlsl/noiseSimplex.hlsl"
 
-            fixed4 _PaleColour;
-            fixed4 _DarkColour;
+            CBUFFER_START(UnityPerMaterial)
+            half4 _PaleColour;
+            half4 _DarkColour;
             float _Frequency;
             float _NoiseScale;
             float _RingScale;
             float _Contrast;
+            CBUFFER_END
 
-            struct v2f
+            struct Attributes
             {
-                float4 vertex:   SV_POSITION;
-                float4 position: TEXCOORD1;
+                float4 positionOS: POSITION;
             };
 
-            v2f vert(appdata_base v)
+            struct Varyings
             {
-                v2f output;
-                output.vertex   = UnityObjectToClipPos(v.vertex);
-                output.position = v.vertex;
-                return output;
+                float4 positionHCS: SV_POSITION;
+                float4 positionOS:  TEXCOORD1;
+            };
+
+            Varyings vert(Attributes IN)
+            {
+                Varyings OUT;
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.positionOS  = IN.positionOS;
+                return OUT;
             }
 
-            float4 frag(v2f i) : COLOR
+            float4 frag(Varyings IN) : COLOR
             {
-                float3 pos    = i.position.xyz * 2;
-                float n = snoise(pos);
-                float ring = frac((_Frequency * pos.z) + (_NoiseScale * n));
-                ring *= _Contrast * (1 - ring);
-                float delta = pow(ring, _RingScale) + n;
-                fixed3 colour = lerp(_DarkColour, _PaleColour, delta);
-                return fixed4(colour, 1);
+                float3 pos   = IN.positionOS.xyz * 2;
+                float n      = snoise(pos);
+                float ring   = frac((_Frequency * pos.z) + (_NoiseScale * n));
+                ring        *= _Contrast * (1 - ring);
+                float delta  = pow(ring, _RingScale) + n;
+                half3 colour = lerp(_DarkColour, _PaleColour, delta);
+                return half4(colour, 1);
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

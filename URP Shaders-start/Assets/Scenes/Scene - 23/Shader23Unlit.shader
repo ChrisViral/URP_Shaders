@@ -8,37 +8,44 @@
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags
+        {
+            "RenderType"="Opaque"
+            "RenderPipeline"="UniversalPipeline"
+        }
         LOD 100
 
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+            CBUFFER_START(UnityPerMaterial)
             int _Sides;
             float _Radius;
             float _Rotation;
+            CBUFFER_END
 
-            struct v2f
+            struct Attributes
             {
-                float4 vertex:    SV_POSITION;
-                float4 position:  TEXCOORD1;
-                float2 uv:        TEXCOORD0;
-                float4 screenPos: TEXCOORD2;
+                float4 positionOS: POSITION;
             };
 
-            v2f vert(appdata_base v)
+            struct Varyings
             {
-                v2f output;
-                output.vertex   = UnityObjectToClipPos(v.vertex);
-                output.position = v.vertex;
-                output.uv       = v.texcoord;
-                output.screenPos = ComputeScreenPos(output.vertex);
-                return output;
+                float4 positionHCS: SV_POSITION;
+                float4 screenPos:  TEXCOORD0;
+            };
+
+            Varyings vert(Attributes IN)
+            {
+                Varyings OUT;
+                OUT.positionHCS   = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.screenPos = ComputeScreenPos(OUT.positionHCS);
+                return OUT;
             }
 
             float circle(float2 pos, float2 center, float radius, float lineWidth, float smoothing)
@@ -54,21 +61,21 @@
             {
                 pos -= center;
                 float theta = atan2(pos.y, pos.x) + rotate;
-                float rad = UNITY_TWO_PI / float(sides);
+                float rad = TWO_PI / float(sides);
                 float edge = radius * smoothing;
                 float dist = cos((floor(0.5 + (theta / rad)) * rad) - theta) * length(pos);
                 return 1 - smoothstep(radius, radius + edge, dist);
             }
 
-            fixed4 frag(v2f i) : SV_Target
+            half4 frag(Varyings IN) : SV_Target
             {
-                float2 pos = i.screenPos.xy * _ScreenParams.xy;
+                float2 pos = IN.screenPos.xy * _ScreenParams.xy;
                 float2 center = _ScreenParams.xy / 2;
-                fixed3 colour = polygon(pos, center, _Radius, _Sides, _Rotation, 0.02) * fixed3(1, 1, 0);
-                colour += circle(pos, center, _Radius, 5, 0.01) * fixed3(1, 1, 1);
-                return fixed4(colour, 1);
+                half3 colour = polygon(pos, center, _Radius, _Sides, _Rotation, 0.02) * half3(1, 1, 0);
+                colour += circle(pos, center, _Radius, 5, 0.01) * half3(1, 1, 1);
+                return half4(colour, 1);
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

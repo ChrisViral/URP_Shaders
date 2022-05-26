@@ -9,20 +9,46 @@
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags
+        {
+            "RenderType"="Opaque"
+            "RenderPipeline"="UniversalPipeline"
+        }
         LOD 100
 
         Pass
         {
-            CGPROGRAM
-            #pragma vertex vert_img
+            HLSLPROGRAM
+            #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            fixed4 _BrickColour;
-            fixed4 _MortarColour;
+            CBUFFER_START(UnityPerMaterial)
+            half4 _BrickColour;
+            half4 _MortarColour;
             int _TileCount;
+            CBUFFER_END
+
+             struct Attributes
+            {
+                float4 positionOS: POSITION;
+                float2 texcoord:   TEXCOORD0;
+            };
+
+            struct Varyings
+            {
+                float4 positionHCS: SV_POSITION;
+                float2 uv:          TEXCOORD0;
+            };
+
+            Varyings vert(Attributes IN)
+            {
+                Varyings OUT;
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv          = IN.texcoord;
+                return OUT;
+            }
 
             float brick(float2 pos, float height, float smoothing)
             {
@@ -44,12 +70,12 @@
                 return saturate(result);
             }
 
-            fixed4 frag(v2f_img i) : SV_Target
+            half4 frag(Varyings IN) : SV_Target
             {
-                fixed3 colour = lerp(_BrickColour.rgb, _MortarColour.rgb, brick(frac(i.uv * _TileCount), 0.05, 0.2));
-                return fixed4(colour, 1);
+                half3 colour = lerp(_BrickColour.rgb, _MortarColour.rgb, brick(frac(IN.uv * _TileCount), 0.05, 0.2));
+                return half4(colour, 1);
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

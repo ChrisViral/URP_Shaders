@@ -2,53 +2,70 @@
 {
     Properties
     {
-        _MainTex("Main Texture", 2D) = "white" { }
-        _Duration("Duration", Float) = 6
+        [NoScaleOffset] _TextureA("Texture A", 2D)     = "white" { }
+        [NoScaleOffset] _TextureB("Texture B", 2D)     = "white" { }
+        [NoScaleOffset] _Duration("Duration", Float)   = 6
+        [NoScaleOffset] _StartTime("StartTime", Float) = 0
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags
+        {
+            "RenderType"="Opaque"
+            "RenderPipeline"="UniversalPipeline"
+        }
         LOD 100
 
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
 
-            #include "UnityCG.cginc"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
-            sampler2D _MainTex;
+            CBUFFER_START(UnityPerMaterial)
+            sampler2D _TextureA;
+            sampler2D _TextureB;
             float _Duration;
+            float _StartTime;
+            CBUFFER_END
 
-            struct v2f
+            struct Attributes
             {
-                float4 vertex:   SV_POSITION;
-                float2 uv:       TEXCOORD0;
-                float4 position: TEXCOORD1;
+                float4 positionOS: POSITION;
+                float2 texcoord:   TEXCOORD0;
             };
 
-            v2f vert(appdata_base v)
+            struct Varyings
             {
-                v2f output;
-                output.vertex   = UnityObjectToClipPos(v.vertex);
-                output.uv       = v.texcoord;
-                output.position = v.vertex;
-                return output;
+                float4 positionHCS: SV_POSITION;
+                float2 uv:          TEXCOORD0;
+            };
+
+            Varyings vert(Attributes IN)
+            {
+                Varyings OUT;
+                OUT.positionHCS = TransformObjectToHClip(IN.positionOS.xyz);
+                OUT.uv          = IN.texcoord;
+                return OUT;
             }
 
-            float4 frag(v2f i) : COLOR
+            half4 frag(Varyings IN) : COLOR
             {
-                float2 pos = i.position.xy * 2;
-                float len = length(pos);
-                float2 ripple = i.uv + ((pos / len) * 0.03 * cos((len * 12) - (_Time.y * 4)));
-                float theta = fmod(_Time.y, _Duration) * (UNITY_TWO_PI / _Duration);
-                float2 uv = lerp(ripple, i.uv, (sin(theta) + 1) / 2);
-                fixed3 colour = tex2D(_MainTex, uv).rgb;
-                return fixed4(colour, 1);
+                float time    = _Time.y - _StartTime;
+                float2 pos    = (2 * IN.uv) - 1;
+                float len     = length(pos);
+                float2 ripple = IN.uv + ((pos / len) * cos((len * 12) - (time * 4)) * 0.03);
+                float delta   = saturate(time / _Duration);
+                float2 uv     = lerp(ripple, IN.uv, delta);
+                half3 colour1 = tex2D(_TextureA, uv).rgb;
+                half3 colour2 = tex2D(_TextureB, uv).rgb;
+                float fade    = smoothstep(delta * 1.4, delta * 2.5, len);
+                half3 colour  = lerp(colour2, colour1, fade);
+                return half4(colour, 1);
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }
-

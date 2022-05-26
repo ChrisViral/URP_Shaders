@@ -23,13 +23,13 @@ Shader "NiksShaders/Shader58Lit"
             #pragma vertex vert
             #pragma fragment frag
 
+            #pragma shader_feature_local _REDIFY
+
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
-
             sampler2D _BaseMap;
-
             CBUFFER_END
 
             struct Attributes
@@ -63,11 +63,16 @@ Shader "NiksShaders/Shader58Lit"
             half4 frag(Varyings IN) : SV_Target
             {
                 Light light         = GetMainLight();
-                half3 lightingColor = LightingLambert(light.color, light.direction, IN.normal);
+                half3 lightingColour = LightingLambert(light.color, light.direction, IN.normal);
                 half3 texel         = tex2D(_BaseMap, IN.uv).rgb;
-                half3 ambient       = (half3)0.3;
-                half3 color         = texel * saturate(lightingColor + ambient);
-                return half4(color, 1);
+                half3 ambient       = 0.3;
+                half3 colour        = texel * saturate(lightingColour + ambient);
+
+                #if _REDIFY
+                colour.gb *= 0.3;
+                colour.r   = saturate(colour.r * 1.5);
+                #endif
+                return half4(colour, 1);
             }
 
             ENDHLSL
@@ -111,4 +116,6 @@ Shader "NiksShaders/Shader58Lit"
             ENDHLSL
         }
     }
+
+    CustomEditor "ShadersLearn.Editor.CustomShaderGUI"
 }
