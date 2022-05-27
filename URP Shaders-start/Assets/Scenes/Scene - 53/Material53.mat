@@ -2,15 +2,16 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Material53
-  m_Shader: {fileID: 4800000, guid: 8bd627b0d31d049169fe3891a0fe8ee8, type: 3}
-  m_ShaderKeywords: _METALLICSPECGLOSSMAP _NORMALMAP _SMOOTHNESS_TEXTURE_ALBEDO_CHANNEL_A
-    _SPECULAR_SETUP
+  m_Shader: {fileID: -6465566751694194690, guid: 91abf472f28c51b44827fad7132d352c,
+    type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -108,6 +109,7 @@ Material:
     - _Metallic: 0
     - _Mode: 0
     - _NormalMapStrength: 2
+    - _NormalStrength: 1
     - _Normal_Map_Strength: 8
     - _OcclusionStrength: 1
     - _Parallax: 0.02
@@ -115,8 +117,9 @@ Material:
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _Reveal_Time: 0
+    - _RimIntensity: 1
     - _RimPower: 0.5
-    - _RimStrength: 3.9
+    - _RimStrength: 5
     - _RimWidth: 0.48
     - _Rim_Intensity: 0.24
     - _Rim_Strength: 3
@@ -133,6 +136,7 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimColor: {r: 0.6981132, g: 0.44455323, b: 0.44455323, a: 0}
+    - _RimColour: {r: 1, g: 1, b: 1, a: 1}
     - _Rim_Color: {r: 0.8867924, g: 0.53960484, b: 0.53960484, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []

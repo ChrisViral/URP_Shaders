@@ -15,7 +15,7 @@ MonoBehaviour:
   version: 5
 --- !u!21 &2100000
 Material:
-  serializedVersion: 6
+  serializedVersion: 8
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -23,7 +23,8 @@ Material:
   m_Name: Material66
   m_Shader: {fileID: -6465566751694194690, guid: 8a4b08a94ba73470096c0dd3aa926663,
     type: 3}
-  m_ShaderKeywords: 
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
   m_LightmapFlags: 0
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -95,6 +96,7 @@ Material:
     - _Glossiness: 0.5
     - _GlossyReflections: 1
     - _IOR: -0.01
+    - _IndexOfRefraction: 1.47
     - _Magnitude: 0.146
     - _Metallic: 0
     - _Mode: 0
@@ -105,7 +107,7 @@ Material:
     - _QueueOffset: 0
     - _Radius: 0.4
     - _ReflectionStrength: 0.278
-    - _Smoothness: 0.387
+    - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
